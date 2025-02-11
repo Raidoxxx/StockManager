@@ -6,32 +6,65 @@ def database():
     conn = sqlite3.connect('stock.db')
 
     sqls = [
-        '''CREATE TABLE IF NOT EXISTS stock (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        create_at TEXT NOT NULL,
-        update_at TEXT NOT NULL
+        '''CREATE TABLE IF NOT EXIST produtos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(255) NOT NULL,
+            codigo_barras VARCHAR(100) UNIQUE,
+            custo DECIMAL(10,2) NOT NULL,
+            preco DECIMAL(10,2) NOT NULL,
+            quantidade INT NOT NULL,
+            unidade VARCHAR(50) NOT NULL,
+            categoria VARCHAR(100),
+            validade DATE,
+            fornecedor_id INT,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id)
         )''',
 
-        '''CREATE TABLE IF NOT EXISTS supplier (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        create_at TEXT NOT NULL,
-        update_at TEXT NOT NULL,
-        stock_id INTEGER NOT NULL,
-        FOREIGN KEY (stock_id) REFERENCES stock(id)
+        '''CREATE TABLE IF NOT EXIST fornecedores (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(255) NOT NULL,
+            contato VARCHAR(255),
+            email VARCHAR(255),
+            telefone VARCHAR(20),
+            endereco TEXT,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )''',
 
-        '''CREATE TABLE IF NOT EXISTS item (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        code TEXT NOT NULL,
-        cost_price REAL NOT NULL,
-        sell_price REAL NOT NULL,
-        create_at TEXT NOT NULL,
-        update_at TEXT NOT NULL,
-        supplier_id INTEGER NOT NULL,
-        FOREIGN KEY (supplier_id) REFERENCES supplier(id)
+        '''CREATE TABLE IF NOT EXIST usuarios (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            senha VARCHAR(255) NOT NULL,
+            cargo ENUM('admin', 'atendente') NOT NULL,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )'''
+
+        '''CREATE TABLE IF NOT EXIST historico_estoque (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            produto_id INT NOT NULL,
+            tipo ENUM('entrada', 'saida', 'ajuste') NOT NULL,
+            quantidade INT NOT NULL,
+            custo DECIMAL(10,2),
+            preco DECIMAL(10,2),
+            fornecedor_id INT,
+            atendente_id INT,
+            motivo TEXT,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (produto_id) REFERENCES produtos(id),
+            FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id),
+            FOREIGN KEY (atendente_id) REFERENCES usuarios(id)
+        )'''
+
+        '''CREATE TABLE IF NOT EXIST alertas (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            produto_id INT NOT NULL,
+            tipo ENUM('estoque_baixo', 'vencimento_proximo', 'movimentacao_anormal') NOT NULL,
+            mensagem TEXT NOT NULL,
+            status ENUM('pendente', 'resolvido') DEFAULT 'pendente',
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (produto_id) REFERENCES produtos(id)
         )'''
     ]
 
